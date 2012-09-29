@@ -1,0 +1,65 @@
+<html>
+<head>
+<script type="text/javascript">
+function scallback(pos) {
+    var html = "";
+    for(var key in pos.coords) {
+        html += key + " = " + pos.coords[key] + "<br>";
+    }
+    html += "<br>";
+    document.getElementById("main").innerHTML = html;
+    console.log("update.");
+}
+function fcallback(err) {
+    var html = "";
+    switch(err.code) {
+    case err.PERMISSION_DENIED:
+        html = "permission denied.";
+        break;
+    case err.POSITION_UNAVAILABLE:
+        html = "position unavailable.";
+        break;
+    case err.TIMEOUT:
+        html = "timeout.";
+        break;
+    }
+    html+= " " + err.message;
+    
+    document.getElementById("main").innerHTML = html;
+}
+var option = {
+    enableHighAccuracy: true,
+    timeout : 1000,
+    maximumAge: 0
+};
+var watchID = 0;
+
+function start() {
+    watchID = window.navigator.geolocation.watchPosition(scallback, fcallback, option);
+    var button = document.getElementById("ctrler"); 
+    button.value = "stop";
+    button.removeEventListener('click', start);
+    button.addEventListener('click', stop, false);
+}
+function stop() {
+    window.navigator.geolocation.clearWatch(watchID);
+    var button = document.getElementById("ctrler"); 
+    button.value = "start";
+    button.removeEventListener('click', stop);
+    button.addEventListener('click', start, false);
+    document.getElementById("main").innerHTML = "";
+}
+
+function init() {
+document.getElementById("ctrler").addEventListener('click', start, false);
+}
+
+this.addEventListener('load', init, false);
+
+</script>
+</head>
+<body>
+<input type="button" value="start" id="ctrler" />
+<div id="main"></div>
+</body>
+</html>
