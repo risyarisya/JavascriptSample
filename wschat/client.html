@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<style>
+div#log {
+    width: 500px;
+    margin: 20px 20px;
+}
+div#log p {
+    margin: 0;
+    padding: 2px 0;
+    line-height: 120%;
+    font-size: 14px;
+    border-bottom: 1px solid #bbb;
+}
+div#log p.info {
+    color: #ff9900;
+    font-weight: bold;
+}
+input#name {
+    width: 5em;
+    border: 2px solid #000;
+}
+input#msg {
+    width: 25em;
+    border: 2px solid #464646;
+}
+input#send {
+    background-color: #000;
+    color: white;
+    border: 1px solid #464646;
+}
+</style>
+<script type="text/javascript">
+var con = null;
+var host = "localhost";
+var port = 7000;
+var colors = ["#0000ff", "#ff0000", "#00ff00", "#ffff00", "#ff00ff"];
+
+function appendMsg(msg, color) 
+{
+    var el = document.createElement("p");
+    el.innerText = msg;
+    el.style.color = color;
+    document.getElementById("log").appendChild(el);
+    return;
+}
+function getColor() 
+{
+    var cls = document.getElementsByName("color"); 
+    var ret = "#000000";
+    for (var key=0; key<cls.length; key++) {
+        if (cls[key].checked) {
+            ret = cls[key].value;
+            break;
+        }
+    }
+    return ret;
+}
+function initNameField() 
+{
+    var el = document.getElementById("name");
+    el.addEventListener('focus', function(e) {
+        el.style.border = "2px solid #000";
+        el.style.textAlign = "left";
+        if (el.value == "Name") el.value = "";
+    }, false);
+    el.addEventListener('blur', function(e) {
+        if (el.value == "") {
+            el.style.border = "2px solid #000";
+            el.value = "Name";
+        } else {
+            el.style.border = "none";
+            el.style.textAlign = "right";
+        }
+    }, false);
+}
+
+function createRadioButtons()
+{
+    var parent = document.getElementById("input_form");
+    for (var i=0; i<colors.length; i++) {
+        var bt = document.createElement("input");
+        bt.type = 'radio';
+        bt.value = colors[i];
+        bt.name = "color";
+        bt.checked = (i==0);
+
+        var sp = document.createElement("span");
+        sp.innerText = "■";
+        sp.style.color= colors[i];
+        sp.style.fontSize = "10px";
+
+        parent.appendChild(bt);
+        parent.appendChild(sp);
+    }
+}
+function init() 
+{
+    con = new WebSocket("ws://"+host+":"+port);
+    con.onmessage = function(message) {
+        var recvdata = JSON.parse(message.data);
+        appendMsg(recvdata.name+" : "+recvdata.msg, recvdata.color);
+    }
+    con.onerror = function() {
+        appendMsg("error!", "#ff9900");
+    }
+    con.onclose = function() {
+        appendMsg("切断しました", "#ff9900");
+    }
+    con.onopen = function() {
+        appendMsg("接続しました", "#ff9900");
+    }
+
+    document.getElementById("send").addEventListener("click", function(e) {
+        if (con) {
+            var msg = document.getElementById("msg").value;
+            var name = document.getElementById("name").value;
+            if (name.length == 0 || msg.length == 0) return;
+
+            var data = { "name" : name, "msg" : msg, "color" : getColor() } ;
+            con.send(JSON.stringify(data));
+        }
+        return false;
+    }, false);
+    initNameField();
+    createRadioButtons();
+}
+this.addEventListener("load", init, false);
+</script>
+</head>
+<body>
+<div id="input_form">
+  <input type="text" id="name" value="Name" />
+  <input type="text" id="msg" />
+  <input type="button" id="send" value="send" />
+</div>
+<div id="log"></div>
+</body>
+</html>
