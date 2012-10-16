@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Chat</title>
+<style>
+div#log {
+    width: 500px;
+}
+input#message {
+    width: 25em;
+    border: 2px solid #464646;
+}
+div#log p {
+    margin: 0;
+    padding: 2px 0;
+    line-height: 129%;
+    font-size: 14px;
+    border-bottom: 1px solid #bbb;
+}
+</style>
+</head>
+<body>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+
+function appendMsg(msg, color) 
+{
+    var el = document.createElement("p");
+    el.innerText = msg;
+    el.style.color = color;
+    document.getElementById("log").appendChild(el);
+    return;
+}
+var socket = io.connect('http://localhost:3000');
+socket.on('connect', function(msg) {
+    console.log("connect");
+    document.getElementById("connectId").innerHTML = 
+        "ID::" + socket.socket.transport.sessid;
+    document.getElementById("type").innerHTML = 
+        "接続方式::" + socket.socket.transport.name;
+});
+
+socket.on('message', function(msg) {
+    var el = document.createElement('p');
+    appendMsg(msg.value, "#464646");
+});
+
+function sendMsg() {
+  var msg = document.getElementById("message").value;
+  socket.emit('message', { value: msg });
+}
+
+function disConnect() {
+  var msg = socket.socket.transport.sessid+"が切断しました";
+  socket.emit('message', { value: msg });
+  socket.disconnect();
+}
+</script>
+
+<div id="connectId"></div>
+<div id="type"></div>
+
+<input type="text" id="message" value="">
+<input type="button" value="send" onclick="sendMsg()">
+<input type="button" value="disconnect" onclick="disConnect()">
+<div id="log"></div>
+
+  </body>
+</html>
